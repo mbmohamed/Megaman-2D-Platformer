@@ -1,9 +1,5 @@
 # Megaman 2D Platformer - Projet Design Patterns
 
-![Pygame](https://img.shields.io/badge/Pygame-2.5.2-green)
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-
 Jeu de plateforme 2D développé en Python/Pygame, implémentant 6 design patterns pour un projet académique.
 
 ## Description
@@ -40,7 +36,7 @@ Ce projet démontre l'utilisation pratique de 6 patterns de conception dans une 
 
 1. Cloner le dépôt:
 ```bash
-git clone [URL_DU_DEPOT]
+git clone https://github.com/mbmohamed/Megaman-2D-Platformer.git
 cd "projet megaman"
 ```
 
@@ -51,7 +47,7 @@ pip install pygame
 
 3. Lancer le jeu:
 ```bash
-python main.py
+python3 main.py
 ```
 
 ## Commandes
@@ -96,6 +92,6 @@ python levels/level_components.py
 
 ## Crédits
 
-- **Membres**: [Nom de l'étudiant]
+- **Membres**: Mohamed Ben Madhi
 - **Cours**: Design Patterns | Enseignant: Haythem Ghazouani
 - **Référence**: Inspiré du tutoriel Pygame de Kenny Yip.
