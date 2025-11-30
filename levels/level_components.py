@@ -101,13 +101,13 @@ class Zone(GameComponent):
     def add(self, component: GameComponent):
         """Ajoute un composant à la zone"""
         self._components.append(component)
-        Logger.log("COMPOSITE", f"Component added to Zone '{self.name}'")
+        # Logger.log("COMPOSITE", f"Component added to Zone '{self.name}'")  # Trop verbeux
     
     def remove(self, component: GameComponent):
         """Retire un composant de la zone"""
         if component in self._components:
             self._components.remove(component)
-            Logger.log("COMPOSITE", f"Component removed from Zone '{self.name}'")
+            # Logger.log("COMPOSITE", f"Component removed from Zone '{self.name}'")
     
     def get_children(self):
         """Retourne les composants de la zone"""

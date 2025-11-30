@@ -70,7 +70,10 @@ class LevelLoader:
         Logger.log("COMPOSITE", f"Loading level {level_number}...")
         
         # Récupère la carte du niveau
-        game_map = tile_map.OPTIMIZED_GAME_MAP1
+        # Utilise le modulo pour boucler sur les cartes disponibles
+        map_index = (level_number - 1) % len(tile_map.GAME_MAPS)
+        game_map = tile_map.GAME_MAPS[map_index]
+        Logger.log("INFO", f"Using map index {map_index} for level {level_number}")
         
         # Crée le niveau (Composite Pattern)
         level = Level(level_number)

@@ -22,7 +22,18 @@ from config import *
 from player import Player, load_player_images
 from entities import load_enemy_images, load_item_images, EnemyFactory, ItemFactory
 from levels import LevelLoader, load_tile_images
-from events import EventManager, ScoreObserver, HealthObserver, SoundObserver, AchievementObserver
+from events import EventManager
+from events.observers import ScoreObserver, HealthObserver, SoundObserver, AchievementObserver, Observer
+
+
+class LevelCompleteObserver(Observer):
+    """Observateur pour la fin de niveau"""
+    def __init__(self, callback):
+        self.callback = callback
+    
+    def notify(self, event_type, data):
+        if event_type == EVENT_LEVEL_COMPLETE:
+            self.callback(event_type, data)
 
 
 class Game:
@@ -36,8 +47,11 @@ class Game:
         Logger.log("INFO", "=== MEGAMAN GAME STARTING ===")
         
         # Récupère le GameManager (Singleton)
-        self.game_manager = GameManager.get_instance()
+        self.game_manager = GameManager()
         self.game_manager.initialize_pygame()
+        
+        # Flags
+        self.next_level_pending = False
         
         # Charge les images
         Logger.log("INFO", "Loading assets...")
@@ -71,6 +85,8 @@ class Game:
     
     def reset_game(self):
         """Reinitialise le jeu"""
+        self.next_level_pending = False
+        
         # Crée le joueur (State Pattern)
         self.player = Player(PLAYER_START_X, PLAYER_START_Y, self.player_images)
         self.game_manager.player = self.player
@@ -81,13 +97,18 @@ class Game:
         
         # Calcul de la largeur du niveau pour la fin
         import tile_map
-        self.level_width = len(tile_map.OPTIMIZED_GAME_MAP1[0]) * TILE_SIZE
+        map_index = (self.game_manager.current_level - 1) % len(tile_map.GAME_MAPS)
+        current_map = tile_map.GAME_MAPS[map_index]
+        self.level_width = len(current_map[0]) * TILE_SIZE
         self.scroll_x = 0
         
         # Liste d'objets collectables
         self.items = []
         
         # Configure les observateurs (Observer Pattern)
+        # Nettoie les anciens observateurs pour éviter les doublons
+        self.event_manager.listeners = {}
+        
         self.score_observer = ScoreObserver(self.game_manager)
         self.health_observer = HealthObserver(self.player)
         self.sound_observer = SoundObserver()
@@ -108,15 +129,6 @@ class Game:
         self.event_manager.subscribe(EVENT_LEVEL_COMPLETE, self.achievement_observer)
         
         # Création d'un observer spécifique pour la fin de niveau
-        from events.observers import Observer
-        class LevelCompleteObserver(Observer):
-            def __init__(self, callback):
-                self.callback = callback
-            
-            def notify(self, event_type, data):
-                if event_type == EVENT_LEVEL_COMPLETE:
-                    self.callback(event_type, data)
-        
         self.level_observer = LevelCompleteObserver(self.on_level_complete)
         self.event_manager.subscribe(EVENT_LEVEL_COMPLETE, self.level_observer)
         
@@ -124,10 +136,10 @@ class Game:
     
     def on_level_complete(self, event_type, data):
         """Gère la fin du niveau"""
-        Logger.log("INFO", "Level Complete! Loading next level...")
-        self.game_manager.current_level += 1
-        self.reset_game()  # Pour l'instant, recharge le niveau (boucle)
-        # Ici on pourrait charger une map différente selon current_level
+        if not self.next_level_pending:
+            Logger.log("INFO", "Level Complete! Scheduling next level load...")
+            self.next_level_pending = True
+            self.game_manager.current_level += 1
     
     def handle_input(self):
         """Gère les entrées utilisateur"""
@@ -210,6 +222,11 @@ class Game:
     
     def update(self):
         """Met à jour la logique du jeu"""
+        # Gestion de la transition de niveau (pour éviter de reset pendant une notification d'event)
+        if self.next_level_pending:
+            self.reset_game()
+            return
+
         if self.game_manager.game_over or self.game_manager.paused:
             return
         
