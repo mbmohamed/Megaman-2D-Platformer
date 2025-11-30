@@ -124,13 +124,6 @@ class RunningState(PlayerState):
             Logger.log("STATE", "Player: RUNNING -> IDLE")
             player.set_state(IdleState())
             return
-        
-        # Mise à jour de la direction
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            player.direction = "left"
-            player.velocity_x = -PLAYER_VELOCITY_X
-        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            player.direction = "right"
             player.velocity_x = PLAYER_VELOCITY_X
     
     def update(self, player):
@@ -152,16 +145,6 @@ class JumpingState(PlayerState):
     
     def handle_input(self, player, keys):
         """Gère les transitions depuis l'état Jumping"""
-        # Contrôle horizontal en l'air
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            player.direction = "left"
-            player.velocity_x = -PLAYER_VELOCITY_X
-        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            player.direction = "right"
-            player.velocity_x = PLAYER_VELOCITY_X
-        else:
-            player.velocity_x = 0
-        
         # Tir en sautant
         if keys[pygame.K_SPACE] or keys[pygame.K_x]:
             Logger.log("STATE", "Player: JUMPING -> JUMP_SHOOTING")
@@ -173,11 +156,13 @@ class JumpingState(PlayerState):
         """Met à jour la physique du saut"""
         # L'atterrissage est géré par le système de collision
         if not player.jumping:  # Le joueur a atterri
-            if player.velocity_x == 0:
-                Logger.log("STATE", "Player: JUMPING -> IDLE")
-                player.set_state(IdleState())
-            else:
+            # Vérifie si des touches de mouvement sont pressées
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] or keys[pygame.K_a] or keys[pygame.K_RIGHT] or keys[pygame.K_d]:
                 Logger.log("STATE", "Player: JUMPING -> RUNNING")
+                player.set_state(RunningState())
+            else:
+                Logger.log("STATE", "Player: JUMPING -> IDLE")
                 player.set_state(RunningState())
     
     def get_image(self, player):
@@ -235,16 +220,6 @@ class RunningShootingState(PlayerState):
                 Logger.log("STATE", "Player: RUNNING_SHOOTING -> IDLE")
                 player.set_state(IdleState())
             return
-        
-        # Mise à jour direction
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            player.direction = "left"
-            player.velocity_x = -PLAYER_VELOCITY_X
-        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            player.direction = "right"
-            player.velocity_x = PLAYER_VELOCITY_X
-        else:
-            player.velocity_x = 0
     
     def update(self, player):
         """Met à jour l'animation"""
@@ -269,16 +244,6 @@ class JumpShootingState(PlayerState):
     
     def handle_input(self, player, keys):
         """Gère les transitions depuis l'état JumpShooting"""
-        # Contrôle horizontal
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            player.direction = "left"
-            player.velocity_x = -PLAYER_VELOCITY_X
-        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            player.direction = "right"
-            player.velocity_x = PLAYER_VELOCITY_X
-        else:
-            player.velocity_x = 0
-        
         # Retour à Jumping après le cooldown
         now = pygame.time.get_ticks()
         if now - self.shoot_time > self.duration:
@@ -288,11 +253,12 @@ class JumpShootingState(PlayerState):
     def update(self, player):
         """Vérifie l'atterrissage"""
         if not player.jumping:
-            if player.velocity_x == 0:
-                Logger.log("STATE", "Player: JUMP_SHOOTING -> IDLE")
-                player.set_state(IdleState())
-            else:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] or keys[pygame.K_a] or keys[pygame.K_RIGHT] or keys[pygame.K_d]:
                 Logger.log("STATE", "Player: JUMP_SHOOTING -> RUNNING")
+                player.set_state(RunningState())
+            else:
+                Logger.log("STATE", "Player: JUMP_SHOOTING -> IDLE")
                 player.set_state(RunningState())
     
     def get_image(self, player):

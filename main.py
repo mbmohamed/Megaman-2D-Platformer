@@ -123,9 +123,54 @@ class Game:
             self.game_manager.toggle_pause()
             pygame.time.wait(200)  # Évite la répétition
         
-        # Délègue au joueur (State Pattern)
+        # Délègue au joueur (State Pattern) et gère le scrolling
         if not self.game_manager.game_over and not self.game_manager.paused:
+            # Scrolling horizontal - déplace la map au lieu du joueur
+            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+                self.move_map_x(PLAYER_VELOCITY_X)
+                self.player.direction = "left"
+            
+            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                self.move_map_x(-PLAYER_VELOCITY_X)
+                self.player.direction = "right"
+            
+            # Le reste des contrôles (saut, tir) est géré par le State Pattern
             self.player.handle_input(keys)
+    
+    def move_map_x(self, velocity_x):
+        """
+        Déplace tous les éléments de la map horizontalement (scrolling).
+        
+        Args:
+            velocity_x: Vélocité horizontale (positif = droite, négatif = gauche)
+        """
+        # Déplace les tuiles du niveau
+        for zone in self.level.get_children():
+            for component in zone.get_children():
+                component.x += velocity_x
+        
+        # Déplace les spikes
+        for spike in self.spikes:
+            spike.x += velocity_x
+        
+        # Déplace les ennemis
+        for enemy in self.enemies:
+            enemy.x += velocity_x
+            # Ajuste la position de départ pour les ennemis mobiles
+            if hasattr(enemy, 'start_x'):
+                enemy.start_x += velocity_x
+            # Déplace les projectiles des ennemis
+            if hasattr(enemy, 'bullets'):
+                for bullet in enemy.bullets:
+                    bullet.x += velocity_x
+        
+        # Déplace les projectiles du joueur
+        for bullet in self.player.bullets:
+            bullet.x += velocity_x
+        
+        # Déplace les objets collectables
+        for item in self.items:
+            item.x += velocity_x
     
     def update(self):
         """Met à jour la logique du jeu"""
