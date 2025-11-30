@@ -169,6 +169,10 @@ class LevelLoader:
                 elif map_code == TILE_BLADER:
                     blader = self.enemy_factory.create("blader", x, y)
                     enemies.append(blader)
+                
+                elif map_code == TILE_GUTSMAN:
+                    gutsman = self.enemy_factory.create("gutsman", x, y)
+                    enemies.append(gutsman)
         
         # Assemble le niveau (Composite Pattern)
         level.add(background_zone)
