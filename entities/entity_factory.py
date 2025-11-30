@@ -3,7 +3,7 @@ Factory Pattern - Création centralisée d'entités
 Factories pour créer les ennemis, items et tiles.
 """
 
-from entities.entities import Metall, Blader, Item
+from entities.entities import Metall, Blader, Gutsman, Item
 from logger import Logger
 from config import *
 import random
@@ -62,6 +62,10 @@ class EnemyFactory(EntityFactory):
         elif entity_type == "blader":
             enemy = Blader(x, y, self.images["blader"])
             Logger.log("FACTORY", f"EnemyFactory created Blader at ({x}, {y})")
+            
+        elif entity_type == "gutsman":
+            enemy = Gutsman(x, y, self.images["gutsman"])
+            Logger.log("FACTORY", f"EnemyFactory created Gutsman at ({x}, {y})")
         
         else:
             Logger.error(f"Unknown enemy type: {entity_type}")
