@@ -150,6 +150,10 @@ class Blader(Enemy):
         else:
             self.y += self.velocity_y
     
+    def on_land(self):
+        """Blader vole, donc ne s'arrête pas au sol"""
+        pass  # Blader ignore les collisions verticales car il vole
+    
     def draw(self, screen):
         """Dessine le Blader"""
         image = self.images[self.direction]
