@@ -76,8 +76,13 @@ class Game:
         self.game_manager.player = self.player
         
         # Charge le niveau (Composite Pattern + Factory Pattern)
-        self.level, self.enemies, self.spikes = self.level_loader.load_level(1)
+        self.level, self.enemies, self.spikes = self.level_loader.load_level(self.game_manager.current_level)
         self.game_manager.current_level_obj = self.level
+        
+        # Calcul de la largeur du niveau pour la fin
+        import tile_map
+        self.level_width = len(tile_map.OPTIMIZED_GAME_MAP1[0]) * TILE_SIZE
+        self.scroll_x = 0
         
         # Liste d'objets collectables
         self.items = []
@@ -102,7 +107,27 @@ class Game:
         
         self.event_manager.subscribe(EVENT_LEVEL_COMPLETE, self.achievement_observer)
         
+        # Création d'un observer spécifique pour la fin de niveau
+        from events.observers import Observer
+        class LevelCompleteObserver(Observer):
+            def __init__(self, callback):
+                self.callback = callback
+            
+            def notify(self, event_type, data):
+                if event_type == EVENT_LEVEL_COMPLETE:
+                    self.callback(event_type, data)
+        
+        self.level_observer = LevelCompleteObserver(self.on_level_complete)
+        self.event_manager.subscribe(EVENT_LEVEL_COMPLETE, self.level_observer)
+        
         self.game_manager.reset_game()
+    
+    def on_level_complete(self, event_type, data):
+        """Gère la fin du niveau"""
+        Logger.log("INFO", "Level Complete! Loading next level...")
+        self.game_manager.current_level += 1
+        self.reset_game()  # Pour l'instant, recharge le niveau (boucle)
+        # Ici on pourrait charger une map différente selon current_level
     
     def handle_input(self):
         """Gère les entrées utilisateur"""
@@ -144,6 +169,17 @@ class Game:
         Args:
             velocity_x: Vélocité horizontale (positif = droite, négatif = gauche)
         """
+        # Vérifie les limites du scrolling
+        # Si on va à droite (velocity_x < 0), on ne doit pas dépasser la fin du niveau
+        if velocity_x < 0 and abs(self.scroll_x) >= self.level_width - GAME_WIDTH:
+            return
+            
+        # Si on va à gauche (velocity_x > 0), on ne doit pas dépasser le début (scroll_x = 0)
+        if velocity_x > 0 and self.scroll_x >= 0:
+            return
+            
+        self.scroll_x += velocity_x
+        
         # Déplace les tuiles du niveau
         for zone in self.level.get_children():
             for component in zone.get_children():
@@ -245,6 +281,12 @@ class Game:
         # Vérifie la mort du joueur
         if self.player.health <= 0 or self.player.y > GAME_HEIGHT:
             self.game_manager.set_game_over(True)
+            
+        # Vérifie la fin du niveau
+        # Si on a scrollé jusqu'au bout et que le joueur est à droite de l'écran
+        if abs(self.scroll_x) >= self.level_width - GAME_WIDTH - TILE_SIZE:
+             # On laisse une marge d'une tuile
+             self.event_manager.notify_observers(EVENT_LEVEL_COMPLETE, {"level": self.game_manager.current_level})
     
     def check_collisions(self):
         """Vérifie les collisions avec les tuiles"""
