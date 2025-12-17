@@ -380,7 +380,8 @@ def load_item_images():
     images = {
         "life_energy": load_image("life-energy.png", (LIFE_ENERGY_WIDTH, LIFE_ENERGY_HEIGHT)),
         "big_life_energy": load_image("big-life-energy.png", (BIG_LIFE_ENERGY_WIDTH, BIG_LIFE_ENERGY_HEIGHT)),
-        "score_ball": load_image("score-ball.png", (TILE_SIZE // 2, TILE_SIZE // 2))
+        "score_ball": load_image("score-ball.png", (TILE_SIZE // 2, TILE_SIZE // 2)),
+        "strength_up": load_image("1up.png", (TILE_SIZE, TILE_SIZE))
     }
     
     Logger.log("INFO", "Item images loaded successfully")

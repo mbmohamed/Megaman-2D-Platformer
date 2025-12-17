@@ -1,11 +1,10 @@
 """
-Configuration centralisée du jeu.
-Contient toutes les constantes et paramètres du jeu.
+Config centralisée du jeu.
 """
 
 import os
 
-# ===== FENÊTRE DE JEU =====
+# Fenêtre
 TILE_SIZE = 32
 ROW_COUNT = 16
 COLUMN_COUNT = ROW_COUNT
@@ -13,11 +12,11 @@ GAME_WIDTH = TILE_SIZE * COLUMN_COUNT
 GAME_HEIGHT = TILE_SIZE * ROW_COUNT
 FPS = 60
 
-# ===== PHYSIQUE =====
-GRAVITY = 0.5
+# Physique
+GRAVITY = 0.6
 FRICTION = 0.4
 
-# ===== JOUEUR (MEGAMAN) =====
+# Joueur
 PLAYER_START_X = GAME_WIDTH / 2
 PLAYER_START_Y = GAME_HEIGHT / 2
 PLAYER_WIDTH = 42
@@ -31,27 +30,25 @@ PLAYER_WALK_HEIGHT = 48
 PLAYER_WALK_SHOOT_WIDTH = 62
 
 PLAYER_VELOCITY_X = 5
-PLAYER_VELOCITY_Y = -11  # Vitesse de saut (négative = vers le haut)
+PLAYER_VELOCITY_Y = -10  # Saut (haut = négatif)
 PLAYER_MAX_HEALTH = 28
 
 # Animation
-PLAYER_ANIMATION_SPEED = 250  # ms entre chaque frame
+PLAYER_ANIMATION_SPEED = 250  # ms/frame
 
-# ===== PROJECTILES DU JOUEUR =====
+# Projectiles joueur
 PLAYER_BULLET_WIDTH = 16
 PLAYER_BULLET_HEIGHT = 12
 PLAYER_BULLET_VELOCITY_X = 8
 PLAYER_SHOOT_COOLDOWN = 250  # ms
 
-# ===== ENNEMIS =====
-# Metall
+# Ennemis
 METALL_WIDTH = 36
 METALL_HEIGHT = 30
 METALL_HEALTH = 1
 METALL_FIRE_RATE = 1000  # ms
 METALL_DETECTION_RANGE = TILE_SIZE * 4
 
-# Metall bullets
 METALL_BULLET_WIDTH = 12
 METALL_BULLET_HEIGHT = 12
 METALL_BULLET_VELOCITY_X = 2
@@ -76,44 +73,41 @@ GUTSMAN_GRAVITY = 0.5
 GUTSMAN_ATTACK_RANGE = TILE_SIZE * 6
 GUTSMAN_THROW_COOLDOWN = 2000  # ms
 
-# ===== ITEMS =====
+# Items
 LIFE_ENERGY_WIDTH = 20
 LIFE_ENERGY_HEIGHT = 24
 LIFE_ENERGY_HEAL = 2
-
 BIG_LIFE_ENERGY_WIDTH = 28
 BIG_LIFE_ENERGY_HEIGHT = 32
 BIG_LIFE_ENERGY_HEAL = 8
-
 SCORE_BALL_POINTS = 1000
+ITEM_VELOCITY_Y = -11  # Monte puis tombe
+ITEM_DROP_CHANCE = 75  # %
 
-ITEM_VELOCITY_Y = -11  # Items volent vers le haut puis retombent
-ITEM_DROP_CHANCE = 75  # % de chance de drop
-
-# ===== HEALTH BAR =====
+# Barre de vie
 HEALTH_WIDTH = 16
 HEALTH_HEIGHT = 4
 HEALTH_BAR_X = TILE_SIZE
 HEALTH_BAR_Y = TILE_SIZE
 
-# ===== INVINCIBILITÉ =====
+# Invincibilité
 INVINCIBILITY_DURATION = 1000  # ms
 
-# ===== SCORES =====
+# Scores
 ENEMY_KILL_SCORE = 500
-SCORE_DIGITS = 7  # Nombre de chiffres à afficher
+SCORE_DIGITS = 7
 
-# ===== CHEMINS DES ASSETS =====
+# Assets
 ASSETS_DIR = "images"
 FONT_PATH = "megaman-game-font.otf"
 FONT_SIZE = 24
 
-# ===== COULEURS =====
+# Couleurs
 COLOR_SKY = (20, 18, 167)
 COLOR_BLACK = (0, 0, 0)
 COLOR_WHITE = (255, 255, 255)
 
-# ===== TILE MAP CODES =====
+# Codes tile map
 TILE_EMPTY = 0
 TILE_ROCK1 = 1
 TILE_ROCK2 = 2
@@ -129,7 +123,7 @@ TILE_METALL = 11
 TILE_BLADER = 12
 TILE_GUTSMAN = 13
 
-# ===== ÉVÉNEMENTS PERSONNALISÉS =====
+# Événements personnalisés
 EVENT_INVINCIBLE_END = 0
 EVENT_SHOOTING_END = 1
 EVENT_ENEMY_DEFEATED = 2

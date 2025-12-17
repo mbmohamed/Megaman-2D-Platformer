@@ -119,7 +119,6 @@ class ItemFactory(EntityFactory):
             )
             Logger.log("FACTORY", f"ItemFactory created BigLifeEnergy at ({x}, {y})")
             
-        elif entity_type == "score_ball":
             item = Item(
                 x, y,
                 TILE_SIZE // 2, TILE_SIZE // 2,
@@ -128,6 +127,16 @@ class ItemFactory(EntityFactory):
                 self.images["score_ball"]
             )
             Logger.log("FACTORY", f"ItemFactory created ScoreBall at ({x}, {y})")
+
+        elif entity_type == "strength_up":
+            item = Item(
+                x, y,
+                TILE_SIZE, TILE_SIZE,
+                "strength_up",
+                0, # No immediate value, applies decorator
+                self.images["strength_up"]
+            )
+            Logger.log("FACTORY", f"ItemFactory created StrengthUp at ({x}, {y})")
         
         else:
             Logger.error(f"Unknown item type: {entity_type}")
@@ -146,7 +155,9 @@ class ItemFactory(EntityFactory):
         """
         chance = random.randint(1, 100)
         
-        if chance <= 20:  # 20% chance de big life energy
+        if chance <= 5: # 5% chance de strength up (Rare)
+            return self.create("strength_up", x, y)
+        elif chance <= 25:  # 20% chance de big life energy
             return self.create("big_life_energy", x, y)
         elif chance <= 50:  # 30% chance de life energy
             return self.create("life_energy", x, y)

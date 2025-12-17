@@ -24,6 +24,7 @@ from entities import load_enemy_images, load_item_images, EnemyFactory, ItemFact
 from levels import LevelLoader, load_tile_images
 from events import EventManager
 from events.observers import ScoreObserver, HealthObserver, SoundObserver, AchievementObserver, Observer
+from powerups.powerup_decorators import StrengthBoostDecorator
 
 
 class LevelCompleteObserver(Observer):
@@ -63,9 +64,11 @@ class Game:
         # Charge le background
         try:
             self.background = pygame.image.load(os.path.join(ASSETS_DIR, "background.png"))
+            self.background2 = pygame.image.load(os.path.join(ASSETS_DIR, "background2.png"))
         except:
             self.background = None
-            Logger.error("Could not load background image")
+            self.background2 = None
+            Logger.error("Could not load background images")
         
         # Crée les Factories (Factory Pattern)
         self.enemy_factory = EnemyFactory(self.enemy_images)
@@ -164,11 +167,11 @@ class Game:
         if not self.game_manager.game_over and not self.game_manager.paused:
             # Scrolling horizontal - déplace la map au lieu du joueur
             if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                self.move_map_x(PLAYER_VELOCITY_X)
+                self.move_map_x(self.player.get_speed())
                 self.player.direction = "left"
             
             if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                self.move_map_x(-PLAYER_VELOCITY_X)
+                self.move_map_x(-self.player.get_speed())
                 self.player.direction = "right"
             
             # Le reste des contrôles (saut, tir) est géré par le State Pattern
@@ -249,7 +252,7 @@ class Game:
             for bullet in self.player.bullets:
                 if bullet.colliderect(enemy) and not bullet.used:
                     bullet.used = True
-                    enemy.health -= 1
+                    enemy.health -= self.player.get_strength()
                     
                     if enemy.health <= 0:
                         # Ennemi vaincu
@@ -283,6 +286,10 @@ class Game:
                 if item.item_type in ["life_energy", "big_life_energy"]:
                     self.player.heal(item.value)
                 
+                elif item.item_type == "strength_up":
+                    self.player.stats = StrengthBoostDecorator(self.player.stats)
+                    Logger.log("INFO", "Player picked up Strength Boost!")
+
                 self.event_manager.notify_observers(EVENT_ITEM_COLLECTED, 
                                                    {"type": item.item_type, 
                                                     "heal": item.value if "energy" in item.item_type else 0})
@@ -341,8 +348,22 @@ class Game:
         """Dessine tous les éléments du jeu"""
         # Background
         self.game_manager.screen.fill(COLOR_SKY)
+        self.game_manager.screen.fill(COLOR_SKY)
+        
+        # Parallax Background
         if self.background:
-            self.game_manager.screen.blit(self.background, (0, 80))
+            # Background 1 (Loin - lent)
+            bg_width = self.background.get_width()
+            bg_x = (self.scroll_x * 0.2) % bg_width
+            self.game_manager.screen.blit(self.background, (bg_x - bg_width, 80))
+            self.game_manager.screen.blit(self.background, (bg_x, 80))
+            
+            # Background 2 (Proche - plus rapide)
+            if self.background2:
+                bg2_width = self.background2.get_width()
+                bg2_x = (self.scroll_x * 0.5) % bg2_width
+                self.game_manager.screen.blit(self.background2, (bg2_x - bg2_width, 80))
+                self.game_manager.screen.blit(self.background2, (bg2_x, 80))
         
         # Niveau (Composite Pattern)
         self.level.render(self.game_manager.screen)
@@ -360,12 +381,12 @@ class Game:
         
         # HUD - Barre de vie
         health_bar_bg = pygame.Rect(HEALTH_BAR_X, HEALTH_BAR_Y, 
-                                    HEALTH_WIDTH, HEALTH_HEIGHT * self.player.max_health)
+                                    HEALTH_WIDTH, HEALTH_HEIGHT * self.player.get_max_health())
         pygame.draw.rect(self.game_manager.screen, COLOR_BLACK, health_bar_bg)
         
         for i in range(self.player.health):
             health_rect = pygame.Rect(HEALTH_BAR_X, 
-                                      HEALTH_BAR_Y + (self.player.max_health - i - 1) * HEALTH_HEIGHT,
+                                      HEALTH_BAR_Y + (self.player.get_max_health() - i - 1) * HEALTH_HEIGHT,
                                       HEALTH_WIDTH, HEALTH_HEIGHT)
             pygame.draw.rect(self.game_manager.screen, COLOR_WHITE, health_rect)
         
@@ -389,9 +410,40 @@ class Game:
         
         pygame.display.update()
     
+    def show_start_screen(self):
+        """Affiche l'écran de démarrage"""
+        waiting = True
+        while waiting and self.game_manager.running:
+            self.game_manager.clock.tick(FPS)
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.game_manager.quit()
+                    return
+                if event.type == pygame.KEYUP:
+                    waiting = False
+            
+            self.game_manager.screen.fill(COLOR_SKY)
+            if self.background:
+                self.game_manager.screen.blit(self.background, (0, 80))
+                
+            # Titre (Ombré)
+            title_text = self.game_manager.font.render("MEGAMAN", True, COLOR_WHITE)
+            title_shadow = self.game_manager.font.render("MEGAMAN", True, COLOR_BLACK)
+            
+            start_text = self.game_manager.font.render("Press any key to start", True, COLOR_WHITE)
+            
+            self.game_manager.screen.blit(title_shadow, (GAME_WIDTH//2 - title_text.get_width()//2 + 2, GAME_HEIGHT//3 + 2))
+            self.game_manager.screen.blit(title_text, (GAME_WIDTH//2 - title_text.get_width()//2, GAME_HEIGHT//3))
+            self.game_manager.screen.blit(start_text, (GAME_WIDTH//2 - start_text.get_width()//2, GAME_HEIGHT//2))
+            
+            pygame.display.flip()
+
     def run(self):
         """Boucle de jeu principale"""
         Logger.log("INFO", "=== GAME LOOP STARTING ===")
+        
+        self.show_start_screen()
         
         while self.game_manager.running:
             self.handle_input()

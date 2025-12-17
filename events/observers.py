@@ -6,6 +6,8 @@ Implémentations concrètes des observateurs pour différents systèmes.
 from events.event_system import Observer
 from logger import Logger
 from config import *
+import pygame
+import os
 
 
 class ScoreObserver(Observer):
@@ -70,7 +72,11 @@ class SoundObserver(Observer):
     """
     
     def __init__(self):
-        Logger.log("OBSERVER", "SoundObserver created")
+        try:
+            pygame.mixer.init()
+            Logger.log("OBSERVER", "SoundObserver initialized (Mixer ready)")
+        except:
+            Logger.error("Could not initialize pygame mixer")
     
     def notify(self, event_type: int, data: dict = None):
         """Réagit aux événements pour jouer des sons"""
@@ -83,8 +89,15 @@ class SoundObserver(Observer):
         
         if event_type in sound_map:
             sound_file = sound_map[event_type]
-            Logger.log("INFO", f"Would play sound: {sound_file}")
-            # pygame.mixer.Sound(sound_file).play() # Non implémenté
+            # Vérifie si le fichier existe
+            if os.path.exists(sound_file):
+                try:
+                    pygame.mixer.Sound(sound_file).play()
+                except:
+                    pass
+            else:
+                # Logger.log("INFO", f"Sound file missing: {sound_file}")
+                pass
 
 
 class AchievementObserver(Observer):

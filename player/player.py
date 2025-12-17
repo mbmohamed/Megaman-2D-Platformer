@@ -1,11 +1,11 @@
 """
-Player - Utilise le State Pattern
-Le joueur Megaman avec gestion d'états dynamique.
+Joueur Megaman (State Pattern)
 """
 
 import pygame
 import os
 from player.player_states import IdleState, PlayerState
+from powerups.powerup_decorators import Character
 from logger import Logger
 from config import *
 
@@ -18,9 +18,9 @@ class Bullet(pygame.Rect):
     def __init__(self, x, y, direction, image):
         """
         Args:
-            x, y: Position initiale
-            direction: Direction du tir ("left" ou "right")
-            image: Image du projectile
+            x, y: Position
+            direction: "left" ou "right"
+            image: Image du tir
         """
         super().__init__(x, y, PLAYER_BULLET_WIDTH, PLAYER_BULLET_HEIGHT)
         self.direction = direction
@@ -29,28 +29,42 @@ class Bullet(pygame.Rect):
         self.used = False
     
     def update(self):
-        """Met à jour la position du projectile"""
         self.x += self.velocity_x
+
+
+class PlayerStats(Character):
+    """
+    Stats du joueur, décorables.
+    """
+    def __init__(self):
+        self.base_speed = PLAYER_VELOCITY_X
+        self.base_strength = 1
+        self.base_defense = 0
+        self.max_health = PLAYER_MAX_HEALTH
+        
+    def get_speed(self) -> int:
+        return self.base_speed
+    
+    def get_strength(self) -> int:
+        return self.base_strength
+        
+    def get_defense(self) -> int:
+        return self.base_defense
+        
+    def get_max_health(self) -> int:
+        return self.max_health
 
 
 class Player(pygame.Rect):
     """
-    Joueur Megaman - Utilise le State Pattern.
-    
-    Le comportement du joueur change selon son état actuel:
-    - IdleState
-    - RunningState
-    - JumpingState
-    - ShootingState
-    - RunningShootingState
-    - JumpShootingState
+    Joueur Megaman avec états dynamiques.
     """
     
     def __init__(self, x, y, images):
         """
         Args:
-            x, y: Position initiale
-            images: Dictionnaire d'images du joueur
+            x, y: Position
+            images: Dictionnaire images
         """
         super().__init__(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
         
@@ -68,8 +82,7 @@ class Player(pygame.Rect):
         self.jumping = False
         
         # Santé et invincibilité
-        self.max_health = PLAYER_MAX_HEALTH
-        self.health = self.max_health
+        self.health = PLAYER_MAX_HEALTH
         self.invincible = False
         self.invincible_start = 0
         
@@ -79,28 +92,38 @@ class Player(pygame.Rect):
         
         # Statistiques
         self.score = 0
+        
+        # Stats (Strategy/Decorator Pattern)
+        self.stats = PlayerStats()
+        
+    def get_speed(self) -> int:
+        return self.stats.get_speed()
+    
+    def get_strength(self) -> int:
+        return self.stats.get_strength()
+        
+    def get_defense(self) -> int:
+        return self.stats.get_defense()
+        
+    def get_max_health(self) -> int:
+        return self.stats.get_max_health()
     
     def set_state(self, new_state: PlayerState):
         """
-        Change l'état du joueur (State Pattern).
-        
-        Args:
-            new_state: Nouvel état à appliquer
+        Change l'état du joueur.
         """
         self.state = new_state
     
     def handle_input(self, keys):
         """
-        Délègue la gestion des entrées à l'état actuel.
-        
-        Args:
-            keys: Touches pressées (pygame.key.get_pressed())
+        Délègue à l'état courant.
         """
         self.state.handle_input(self, keys)
     
     def update(self):
-        """Met à jour le joueur"""
-        # Délègue à l'état actuel
+        """
+        Met à jour le joueur.
+        """
         self.state.update(self)
         
         # Applique la gravité
@@ -121,11 +144,12 @@ class Player(pygame.Rect):
             bullet.update()
         
         # Retire les projectiles hors écran ou utilisés
-        self.bullets = [b for b in self.bullets 
-                       if not b.used and 0 < b.x < GAME_WIDTH]
+        self.bullets = [b for b in self.bullets if not b.used and 0 < b.x < GAME_WIDTH]
     
     def shoot(self):
-        """Tire un projectile"""
+        """
+        Tire un projectile.
+        """
         now = pygame.time.get_ticks()
         
         # Vérifie le cooldown
@@ -156,10 +180,13 @@ class Player(pygame.Rect):
         if self.invincible:
             return
         
-        self.health -= damage
+        # Applique la défense (réduction de dégâts)
+        actual_damage = max(1, damage - self.get_defense())
+        
+        self.health -= actual_damage
         self.health = max(0, self.health)
         
-        Logger.log("INFO", f"Player took {damage} damage (health: {self.health}/{self.max_health})")
+        Logger.log("INFO", f"Player took {damage} damage (health: {self.health}/{self.get_max_health()})")
         
         if self.health > 0:
             self.set_invincible()
@@ -172,11 +199,11 @@ class Player(pygame.Rect):
             amount: Quantité de soin
         """
         old_health = self.health
-        self.health = min(self.health + amount, self.max_health)
+        self.health = min(self.health + amount, self.get_max_health())
         actual_heal = self.health - old_health
         
         if actual_heal > 0:
-            Logger.log("INFO", f"Player healed {actual_heal} HP (health: {self.health}/{self.max_health})")
+            Logger.log("INFO", f"Player healed {actual_heal} HP (health: {self.health}/{self.get_max_health()})")
     
     def set_invincible(self):
         """Active l'invincibilité temporaire"""
