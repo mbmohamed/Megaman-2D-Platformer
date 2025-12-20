@@ -92,6 +92,6 @@ python levels/level_components.py
 
 ## Crédits
 
-- **Membres**: Mohamed Ben Madhi
+- **Membres**: Mohamed Ben Madhi , Aymen Satouri
 - **Cours**: Design Patterns | Enseignant: Haythem Ghazouani
 - **Référence**: Inspiré du tutoriel Pygame de Kenny Yip.
